@@ -1,0 +1,63 @@
+@use "base/variables" as v;
+
+.contenedor {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0 auto;
+	flex-direction: column;
+
+	.inputs__contenedor {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 1rem 1rem;
+	}
+
+	.contenedor--2 {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.input__file::-webkit-file-upload-button {
+		visibility: hidden;
+	}
+
+	.input__search {
+		background-color: v.$gris-claro;
+		border-radius: 0.5rem;
+		border: 1px solid v.$gris-claro2;
+		padding: 1rem;
+		box-sizing: border-box;
+		font-size: 1.3rem;
+		margin-bottom: 1rem;
+	}
+
+	.input__file::before {
+		content: "Select some files";
+		display: inline-block;
+		background: linear-gradient(to right, #89a6e6, #e3e3e3);
+		border: 1px solid #999;
+		border-radius: 0.5rem;
+		padding: 5px 8px;
+		outline: none;
+		white-space: nowrap;
+		-webkit-user-select: none;
+		cursor: pointer;
+		text-shadow: 1px 1px #fff;
+		font-weight: v.$regular;
+		font-size: 1.6rem;
+	}
+
+	.input__file:hover::before {
+		border-color: black;
+	}
+
+	.lista {
+		list-style: none;
+		margin-top: 0;
+	}
+}

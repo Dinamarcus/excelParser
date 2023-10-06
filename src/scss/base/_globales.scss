@@ -1,0 +1,44 @@
+@use "variables" as v;
+@use "mixins" as m;
+
+html {
+	font-size: 62.5%;
+	box-sizing: border-box;
+	height: 100%;
+}
+*,
+*:before,
+*:after {
+	box-sizing: inherit;
+}
+body {
+	font-family: v.$fuente_principal;
+	font-size: 1.8rem;
+}
+a {
+	text-decoration: none;
+}
+img {
+	width: 100%;
+	height: auto;
+}
+
+.input {
+	position: relative;
+	z-index: 1;
+	display: inline-block;
+	margin: 1em;
+	max-width: 350px;
+	width: calc(100% - 2em);
+	vertical-align: top;
+	margin-bottom: 0;
+}
+
+.label {
+	font-weight: v.$bold;
+	font-size: 2rem;
+}
+
+.li {
+	margin: 0 0 1rem 0;
+}
