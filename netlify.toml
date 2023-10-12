@@ -1,0 +1,3 @@
+[build]
+command = "gulp gulp"
+publish = "public"

@@ -1,10 +1,15 @@
 import * as XLSX from "xlsx/xlsx.mjs";
 
 (function () {
+	let workbook;
+	let file;
+	let headers;
 	const fileInput = document.getElementById("file-input");
 	const searchInput = document.getElementById("search-input");
+	searchInput.disabled = true;
 	const lista = document.getElementById("lista");
 	let registros = [];
+	let copy = [];
 
 	document.addEventListener("DOMContentLoaded", () => {
 		eventListeners();
@@ -16,12 +21,19 @@ import * as XLSX from "xlsx/xlsx.mjs";
 	}
 
 	function showRegist(event) {
-		const file = event.target.files[0];
+		file = event.target.files[0];
+		console.log(file);
 		const reader = new FileReader();
 
 		reader.onload = (event) => {
 			const data = event.target.result;
-			const workbook = XLSX.read(data, { type: "binary", cellDates: true });
+			workbook = XLSX.read(data, {
+				type: "binary",
+				cellDates: true,
+				cellNF: false,
+				cellText: false,
+				dateNF: "dd/mm/yyyy",
+			});
 			const worksheet = workbook.Sheets["Hoja1"];
 			registros = XLSX.utils.sheet_to_json(worksheet);
 			registros = registros.map((registro) => {
@@ -38,7 +50,7 @@ import * as XLSX from "xlsx/xlsx.mjs";
 					registro.AE = registro.AE.toString();
 				}
 				if (registro.FECHA_MOV !== undefined) {
-					const date = new Date(registro.FECHA_MOV);
+					let date = new Date(registro.FECHA_MOV);
 					registro.FECHA_MOV = date.toLocaleDateString();
 				}
 
@@ -76,12 +88,21 @@ import * as XLSX from "xlsx/xlsx.mjs";
 			});
 
 			registros.forEach((registro) => {
-				const li = document.createElement("li");
+				const li = document.createElement("LI");
 				li.classList.add("li");
-				li.textContent = `${registro.RAZON_SOCI} ${registro.FECHA_MOV} ${registro["REMITO "]} ${registro.FACTURA} ${registro.DESCRIPCIO} ${registro.CANT_PEND} ${registro.OC} ${registro.AE}`;
+				li.innerHTML = `
+				<i class="fa fa-pencil"></i>
+				${registro.RAZON_SOCI} ${registro.FECHA_MOV} ${registro["REMITO "]} ${registro.FACTURA} ${registro.DESCRIPCIO} ${registro.CANT_PEND} ${registro.OC} ${registro.AE}
+				`;
+
+				const icon = li.querySelector("i");
+				icon.style.cursor = "pointer";
+				icon.addEventListener("click", editRegist);
 
 				lista.appendChild(li);
 			});
+
+			searchInput.disabled = false;
 
 			console.log(registros);
 		};
@@ -90,7 +111,7 @@ import * as XLSX from "xlsx/xlsx.mjs";
 	}
 
 	function searchRegist(e) {
-		let copy = [...registros];
+		copy = [...registros];
 
 		if (e.target.value === "") {
 			copy = [...registros];
@@ -98,7 +119,16 @@ import * as XLSX from "xlsx/xlsx.mjs";
 			lista.innerHTML = "";
 			registros.forEach((registro) => {
 				const li = document.createElement("LI");
-				li.textContent = `${registro.RAZON_SOCI} ${registro.FECHA_MOV} ${registro["REMITO "]} ${registro.FACTURA} ${registro.DESCRIPCIO} ${registro.CANT_PEND} ${registro.OC} ${registro.AE}`;
+				li.classList.add("li");
+				li.innerHTML = `
+				<i class="fa fa-pencil"></i>
+				${registro.RAZON_SOCI} ${registro.FECHA_MOV} ${registro["REMITO "]} ${registro.FACTURA} ${registro.DESCRIPCIO} ${registro.CANT_PEND} ${registro.OC} ${registro.AE}
+				`;
+
+				const icon = li.querySelector("i");
+				icon.style.cursor = "pointer";
+				icon.addEventListener("click", editRegist);
+
 				lista.appendChild(li);
 			});
 		}
@@ -113,14 +143,101 @@ import * as XLSX from "xlsx/xlsx.mjs";
 
 		if (copy.length === 0) {
 			const li = document.createElement("LI");
-			li.textContent = "No se encontraron resultados";
+			li.classList.add("li");
+			li.innerHTML = `
+			<p>No se encontró el registro</p>
+			`;
 			lista.appendChild(li);
 		} else {
 			copy.forEach((registro) => {
 				const li = document.createElement("LI");
-				li.textContent = `${registro.RAZON_SOCI} ${registro.FECHA_MOV} ${registro["REMITO "]} ${registro.FACTURA} ${registro.DESCRIPCIO} ${registro.CANT_PEND} ${registro.OC} ${registro.AE}`;
+				li.classList.add("li");
+				li.innerHTML = `
+				<i class="fa fa-pencil"></i>
+				${registro.RAZON_SOCI} ${registro.FECHA_MOV} ${registro["REMITO "]} ${registro.FACTURA} ${registro.DESCRIPCIO} ${registro.CANT_PEND} ${registro.OC} ${registro.AE}
+				`;
+
+				const icon = li.querySelector("i");
+				icon.style.cursor = "pointer";
+				icon.addEventListener("click", editRegist);
+
 				lista.appendChild(li);
 			});
 		}
+	}
+
+	function editRegist(e) {
+		const string = e.target.parentElement.innerText;
+		const stringArray = string.split(" ");
+		console.log(stringArray);
+
+		const body = document.querySelector(".body");
+		const modal = document.createElement("DIV");
+		modal.classList.add("modal");
+		modal.innerHTML = `
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2>Edit Register</h2>
+			</div>
+			<div class="modal-body">
+			<div>
+				<p>${string}</p>
+			</div>
+			<div>
+				<input id="searchAe" type="text" placeholder="Ingrese el numero de AE">
+			</div>
+			</div>
+			<div class="modal-footer">
+				<button class="saveButton">Save</button>
+				<button class="close__modal">Cancel</button>
+			</div>
+		  </div>
+		`;
+
+		body.appendChild(modal);
+
+		const cancel = modal.querySelector(".close__modal");
+		cancel.addEventListener("click", () => {
+			modal.remove();
+		});
+
+		const aeInpt = modal.querySelector("#searchAe");
+		aeInpt.addEventListener("input", (e) => {
+			let value = e.target.value;
+
+			registros.forEach((registro) => {
+				if (registro["REMITO "] === stringArray[5]) {
+					console.log("entro el if");
+					registro.AE = value;
+				}
+			});
+		});
+
+		const saveButton = modal.querySelector(".saveButton");
+		saveButton.addEventListener("click", () => {
+			// Update the worksheet in the XLSX file with the modified values
+			const worksheet = workbook.Sheets["Hoja1"];
+			Object.keys(worksheet).forEach((cell) => {
+				if (cell[0] === "A") {
+					worksheet[cell].s = { fill: { fgColor: { rgb: "FF0000" } } }; // Set the fill color to red for header cells
+				}
+			});
+			registros.forEach((registro, index) => {
+				const row = index + 2; // Add 2 to the index to account for the header row
+				if (worksheet[`A${row}`]) worksheet[`A${row}`].v = registro.RAZON_SOCI;
+				if (worksheet[`B${row}`]) worksheet[`B${row}`].v = registro.FECHA_MOV;
+				if (worksheet[`C${row}`]) worksheet[`C${row}`].v = registro["REMITO "];
+				if (worksheet[`D${row}`]) worksheet[`D${row}`].v = registro.FACTURA;
+				if (worksheet[`E${row}`]) worksheet[`E${row}`].v = registro.DESCRIPCIO;
+				if (worksheet[`F${row}`]) worksheet[`F${row}`].v = registro.CANT_PEND;
+				if (worksheet[`G${row}`]) worksheet[`G${row}`].v = registro.OC;
+				if (worksheet[`H${row}`]) worksheet[`H${row}`].v = registro.AE;
+			});
+
+			// Write the updated XLSX file
+			XLSX.writeFile(workbook, file.name);
+
+			modal.style.display = "none";
+		});
 	}
 })();
